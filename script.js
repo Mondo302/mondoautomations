@@ -110,3 +110,103 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("scroll", revealOnScroll);
   revealOnScroll(); // run once on load
 });
+
+// =============================
+// HERO WORD ROTATOR (typewriter)
+// =============================
+(() => {
+  const el = document.getElementById("rotate-word");
+  if (!el) return;
+
+  const words = ["systems", "automations", "workflows", "AI agents"];
+  let i = 0;          // which word
+  let j = 0;          // which character
+  let deleting = false;
+
+  const TYPE_SPEED = 65;       // ms per char while typing
+  const DELETE_SPEED = 40;     // ms per char while deleting
+  const HOLD_BEFORE_DELETE = 900; // ms to hold full word
+  const HOLD_BEFORE_TYPE = 300;   // ms to pause before typing next word
+
+  const reduceMotion =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Reduced-motion fallback: simple swap (no typewriter)
+  if (reduceMotion) {
+    const swap = () => {
+      el.textContent = words[i];
+      i = (i + 1) % words.length;
+    };
+    swap();
+    setInterval(swap, 1500);
+    return;
+  }
+
+  function tick() {
+    const current = words[i];
+
+    if (!deleting) {
+      // typing
+      el.textContent = current.slice(0, j + 1);
+      j++;
+
+      if (j === current.length) {
+        // word complete
+        setTimeout(() => {
+          deleting = true;
+          tick();
+        }, HOLD_BEFORE_DELETE);
+        return;
+      }
+
+      setTimeout(tick, TYPE_SPEED);
+    } else {
+      // deleting
+      el.textContent = current.slice(0, j - 1);
+      j--;
+
+      if (j === 0) {
+        deleting = false;
+        i = (i + 1) % words.length;
+        setTimeout(tick, HOLD_BEFORE_TYPE);
+        return;
+      }
+
+      setTimeout(tick, DELETE_SPEED);
+    }
+  }
+
+  // initial delay for a smoother entrance
+  setTimeout(tick, 300);
+})();
+
+// --- Subtle Parallax Drift ---
+window.addEventListener('scroll', () => {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+
+  const scrollY = window.scrollY * 0.3; // smaller = slower drift
+  hero.style.backgroundPositionY = `${scrollY}px`;
+});
+
+// --- Scroll Reveal ---
+const revealElements = document.querySelectorAll('.feature-box, .gallery-card, .section-block');
+const observer = new IntersectionObserver(
+  entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  },
+  { threshold: 0.2 }
+);
+
+revealElements.forEach(el => {
+  el.classList.add('reveal');
+  observer.observe(el);
+});
+
+
